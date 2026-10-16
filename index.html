@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>找群搭子 - 找到你想加入的那个圈子</title>
+<!-- 腾讯云 CloudBase SDK（已打包为本地文件，不依赖外部CDN） -->
+<script src="./cloudbase.bundle.js?v=20261016"></script>
+<script>
+// 检测 SDK 是否加载成功
+if (typeof cloudbase === 'undefined') {
+  alert('CloudBase SDK 加载失败，请检查 cloudbase.bundle.js 是否存在');
+}
+</script>
+<style>
+  :root {
+    --cream: #FAF5EE;
+    --ink: #16323C;
+    --coral: #FF4D2E;
+    --coral-dark: #E8401F;
+    --coral-light: #FFE9E2;
+    --line: #EFE6D9;
+    --muted: #8A8378;
+    --card: #FFFFFF;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+  .nav { max-width: 960px; margin: 0 auto; padding: 22px 20px; display: flex; justify-content: space-between; align-items: center; }
+  .logo { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+  .logo i { display: inline-block; width: 10px; height: 10px; background: var(--coral); border-radius: 3px; margin-right: 8px; transform: rotate(15deg); }
+  .hero { max-width: 760px; margin: 0 auto; text-align: center; padding: 48px 20px 0; }
+  .badge { display: inline-block; font-size: 12px; color: var(--coral); background: var(--coral-light); border-radius: 999px; padding: 6px 16px; letter-spacing: 1px; margin-bottom: 26px; }
+  .hero h1 { font-size: 52px; line-height: 1.25; font-weight: 800; letter-spacing: -1px; margin-bottom: 18px; }
+  .hero h1 em { font-family: Georgia, "Songti SC", "STSong", serif; font-style: italic; font-weight: 500; color: var(--coral); }
+  .hero .sub { font-size: 15px; color: var(--muted); line-height: 1.9; max-width: 460px; margin: 0 auto 36px; }
+  .search-wrap { max-width: 560px; margin: 0 auto; padding: 0 20px; }
+  .search-box { display: flex; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 6px 6px 6px 22px; box-shadow: 0 8px 30px rgba(22,50,60,0.07); }
+  .search-box input { flex: 1; border: none; outline: none; font-size: 15px; background: transparent; color: var(--ink); min-width: 0; }
+  .search-box input::placeholder { color: #B8B0A2; }
+  .search-box button { border: none; background: var(--ink); color: #fff; border-radius: 999px; padding: 12px 26px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; white-space: nowrap; }
+  .search-box button:hover { background: var(--coral); }
+  .hot-tags { margin-top: 18px; text-align: center; font-size: 13px; color: var(--muted); }
+  .hot-tags span { display: inline-block; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 6px 16px; margin: 6px 4px 0; cursor: pointer; color: var(--ink); font-size: 13px; transition: all .15s; }
+  .hot-tags span:hover { border-color: var(--coral); color: var(--coral); background: var(--coral-light); }
+  .credit-bar { max-width: 720px; margin: 44px auto 0; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .credit-info { font-size: 13px; color: var(--muted); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 10px 18px; }
+  .credit-info b { color: var(--coral); font-size: 17px; font-family: Georgia, serif; margin: 0 2px; }
+  .btn-share { background: var(--coral); color: #fff; border: none; border-radius: 999px; padding: 12px 22px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s; box-shadow: 0 6px 18px rgba(255,77,46,0.28); }
+  .btn-share:hover { background: var(--coral-dark); transform: translateY(-1px); }
+  .group-list { max-width: 720px; margin: 20px auto 0; padding: 0 20px 80px; }
+  .list-title { font-size: 13px; color: var(--muted); letter-spacing: 2px; margin: 12px 4px 18px; display: flex; align-items: center; gap: 12px; }
+  .list-title::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+  .group-card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 18px; margin-bottom: 14px; display: flex; gap: 16px; transition: all .2s; }
+  .group-card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(22,50,60,0.08); border-color: var(--coral); }
+  .group-card.expired { opacity: .7; }
+  .group-card.expired .qr-thumb { filter: grayscale(1); cursor: not-allowed; }
+  .group-card .qr-thumb { width: 84px; height: 84px; border-radius: 14px; flex-shrink: 0; border: 1px solid var(--line); object-fit: cover; cursor: pointer; transition: transform .2s; }
+  .group-card .qr-thumb:hover { transform: scale(1.05); }
+  .group-card .info { flex: 1; min-width: 0; }
+  .title-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .group-card .info h3 { font-size: 17px; margin-bottom: 5px; letter-spacing: -0.3px; }
+  .group-card .info .desc { font-size: 13px; color: var(--muted); line-height: 1.7; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .group-card .meta { margin-top: 10px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+  .group-card .meta .tag { display: inline-block; background: var(--coral-light); color: var(--coral); border-radius: 999px; padding: 3px 10px; font-size: 12px; }
+  .group-card .meta .city { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .expire-chip { display: inline-block; font-size: 11px; border-radius: 999px; padding: 3px 10px; background: #F3EDE3; color: var(--muted); }
+  .expire-chip.soon { background: var(--coral-light); color: var(--coral-dark); }
+  .expire-chip.over { background: var(--ink); color: #fff; }
+  .btn-mini { border: 1px solid var(--coral); background: var(--coral-light); color: var(--coral-dark); border-radius: 999px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; }
+  .btn-mini:hover { background: var(--coral); color: #fff; }
+  .btn-report { border: none; background: none; color: #C9C0B2; font-size: 12px; cursor: pointer; padding: 2px 0; flex-shrink: 0; }
+  .btn-report:hover { color: var(--coral); }
+  .empty { text-align: center; color: var(--muted); padding: 70px 0; font-size: 14px; line-height: 2; }
+  .footer { text-align: center; font-size: 12px; color: #B8B0A2; padding: 0 20px 40px; letter-spacing: 1px; }
+  .footer .admin-link { color: #C9C0B2; cursor: pointer; text-decoration: underline; margin-left: 12px; }
+  .footer .admin-link:hover { color: var(--coral); }
+  .modal-mask { display: none; position: fixed; inset: 0; background: rgba(22,50,60,0.45); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  .modal-mask.show { display: flex; }
+  .modal { background: var(--cream); border-radius: 24px; width: 100%; max-width: 440px; max-height: 85vh; overflow-y: auto; padding: 28px; }
+  .modal h2 { font-size: 20px; margin-bottom: 16px; letter-spacing: -0.5px; }
+  .modal h2 em { font-family: Georgia, serif; font-style: italic; color: var(--coral); font-weight: 500; }
+  .modal .tip { background: var(--coral-light); color: var(--coral-dark); font-size: 12px; border-radius: 12px; padding: 12px 14px; margin-bottom: 18px; line-height: 1.7; }
+  .form-item { margin-bottom: 14px; }
+  .form-item label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .form-item input[type="text"], .form-item textarea { width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 11px 14px; font-size: 14px; outline: none; font-family: inherit; color: var(--ink); transition: border-color .15s; }
+  .form-item input:focus, .form-item textarea:focus { border-color: var(--coral); }
+  .form-item textarea { resize: none; height: 72px; }
+  .form-item input[type="file"] { font-size: 13px; color: var(--muted); }
+  .qr-preview { width: 120px; height: 120px; border: 1px solid var(--line); border-radius: 12px; margin-top: 10px; display: none; object-fit: cover; }
+  .radio-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .radio-row label { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 7px 14px; font-size: 13px; cursor: pointer; color: var(--ink); margin-bottom: 0; }
+  .radio-row input { display: none; }
+  .radio-row label:has(input:checked) { border-color: var(--coral); background: var(--coral-light); color: var(--coral-dark); }
+  .modal .actions { display: flex; gap: 12px; margin-top: 22px; }
+  .modal .actions button { flex: 1; border: none; border-radius: 999px; padding: 13px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; }
+  .btn-primary { background: var(--coral); color: #fff; box-shadow: 0 6px 16px rgba(255,77,46,0.25); }
+  .btn-primary:hover { background: var(--coral-dark); }
+  .btn-cancel { background: var(--card); color: var(--muted); border: 1px solid var(--line) !important; }
+  .qr-big { display: block; width: 230px; height: 230px; margin: 4px auto 18px; border-radius: 16px; border: 1px solid var(--line); background: #fff; padding: 8px; }
+  .qr-modal-text { text-align: center; font-size: 13px; color: var(--muted); line-height: 1.9; }
+  .admin-item { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+  .admin-item .reason { display: inline-block; font-size: 12px; color: var(--coral-dark); background: var(--coral-light); border-radius: 999px; padding: 3px 10px; margin: 8px 0 4px; }
+  .admin-item .ops { display: flex; gap: 8px; margin-top: 12px; }
+  .admin-item .ops button { flex: 1; border-radius: 999px; border: none; padding: 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-remove { background: var(--ink); color: #fff; }
+  .btn-restore { background: var(--coral-light); color: var(--coral-dark); }
+  .toast { position: fixed; top: 42%; left: 50%; transform: translate(-50%,-50%); background: var(--ink); color: #fff; padding: 13px 26px; border-radius: 999px; font-size: 14px; z-index: 200; display: none; box-shadow: 0 10px 30px rgba(22,50,60,0.3); }
+  @media (max-width: 560px) { .hero h1 { font-size: 36px; } .credit-bar { justify-content: center; } }
+</style>
+</head>
+<body>
+
+<div class="nav"><div class="logo"><i></i>找群搭子</div></div>
+
+<div class="hero">
+  <div class="badge">分享 1 个群 = 1 次搜索机会</div>
+  <h1>找到你想加入的<br><em>那个圈子</em></h1>
+  <p class="sub">想找网球搭子、本地宠物群、同城骑行圈？<br>分享你已加入的微信群，解锁搜索，扫码直达同好。</p>
+</div>
+
+<div class="search-wrap">
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="网球、宠物、骑行、同城……">
+    <button onclick="doSearch()">搜一下</button>
+  </div>
+  <div class="hot-tags">
+    大家都在搜：
+    <span onclick="quickSearch('网球')">网球</span>
+    <span onclick="quickSearch('宠物')">宠物</span>
+    <span onclick="quickSearch('骑行')">骑行</span>
+    <span onclick="quickSearch('跑步')">跑步</span>
+    <span onclick="quickSearch('羽毛球')">羽毛球</span>
+    <span onclick="quickSearch('读书')">读书</span>
+  </div>
+</div>
+
+<div class="credit-bar">
+  <div class="credit-info">我的搜索次数还剩 <b id="creditNum">0</b> 次</div>
+  <button class="btn-share" onclick="openUpload()">＋ 分享群二维码，换搜索机会</button>
+</div>
+
+<div class="group-list">
+  <div class="list-title">最新分享的群</div>
+  <div id="groupList"></div>
+</div>
+
+<div class="footer">
+  © 找群搭子 · 让每个兴趣都能找到同类
+  <span class="admin-link" onclick="openAdmin()">审核中心（管理员入口）</span>
+</div>
+
+<!-- 发布群二维码弹窗 -->
+<div class="modal-mask" id="uploadModal">
+  <div class="modal">
+    <h2>分享一个<em>微信群</em></h2>
+    <div class="tip">分享 1 个你已加入的群二维码，即可获得 1 次搜索机会。二维码有效期 7 天，过期后更新可再得 1 次机会。</div>
+    <div class="form-item"><label>群名称 *</label><input type="text" id="fName" placeholder="例如：周末网球搭子群"></div>
+    <div class="form-item"><label>所在城市 / 地区 *</label><input type="text" id="fCity" placeholder="例如：上海 · 浦东"></div>
+    <div class="form-item"><label>标签（用逗号隔开）*</label><input type="text" id="fTags" placeholder="例如：网球,运动,搭子"></div>
+    <div class="form-item"><label>一句话介绍</label><textarea id="fDesc" placeholder="这个群是做什么的？氛围怎么样？"></textarea></div>
+    <div class="form-item">
+      <label>微信群二维码图片 *</label>
+      <input type="file" id="fQr" accept="image/*" onchange="previewQr(this)">
+      <img class="qr-preview" id="qrPreview">
+    </div>
+    <div class="actions">
+      <button class="btn-cancel" onclick="closeModal('uploadModal')">取消</button>
+      <button class="btn-primary" onclick="submitGroup()">提交，获得搜索机会</button>
+    </div>
+  </div>
+</div>
+
+<!-- 举报弹窗 -->
+<div class="modal-mask" id="reportModal">
+  <div class="modal">
+    <h2>举报这个<em>群</em></h2>
+    <div class="tip">提交后该群会立即暂时下架，进入人工审核队列。审核确认违规将永久下架；误报会恢复上架。恶意举报会影响你的账号信用。</div>
+    <div class="form-item">
+      <label>举报原因 *</label>
+      <div class="radio-row">
+        <label><input type="radio" name="reason" value="垃圾广告"><span>垃圾广告</span></label>
+        <label><input type="radio" name="reason" value="诈骗嫌疑"><span>诈骗嫌疑</span></label>
+        <label><input type="radio" name="reason" value="违法违规"><span>违法违规</span></label>
+        <label><input type="radio" name="reason" value="二维码无效"><span>二维码无效</span></label>
+        <label><input type="radio" name="reason" value="其他"><span>其他</span></label>
+      </div>
+    </div>
+    <div class="form-item"><label>补充说明（选填）</label><textarea id="reportDesc" placeholder="简单描述一下问题，帮助审核员快速判断"></textarea></div>
+    <div class="actions">
+      <button class="btn-cancel" onclick="closeModal('reportModal')">取消</button>
+      <button class="btn-primary" onclick="submitReport()">提交举报</button>
+    </div>
+  </div>
+</div>
+
+<!-- 更新二维码弹窗 -->
+<div class="modal-mask" id="updateModal">
+  <div class="modal">
+    <h2>更新<em>二维码</em></h2>
+    <div class="tip">微信群二维码 7 天会过期。上传新的群二维码后，群立即恢复可加入，并且你再获得 1 次搜索机会。</div>
+    <div class="form-item">
+      <label>新的群二维码图片 *</label>
+      <input type="file" id="uQr" accept="image/*" onchange="previewUpdateQr(this)">
+      <img class="qr-preview" id="uQrPreview">
+    </div>
+    <div class="actions">
+      <button class="btn-cancel" onclick="closeModal('updateModal')">取消</button>
+      <button class="btn-primary" onclick="submitUpdate()">更新，+1 次搜索机会</button>
+    </div>
+  </div>
+</div>
+
+<!-- 审核中心弹窗 -->
+<div class="modal-mask" id="adminModal">
+  <div class="modal">
+    <h2>审核<em>中心</em></h2>
+    <div class="tip">被举报的群会暂时下架并列在这里，由人工核实：确认违规就「下架」，误报就「恢复上架」。真实产品中，这个入口只有管理员登录后才能看到。</div>
+    <div id="adminList"></div>
+    <div class="actions"><button class="btn-cancel" onclick="closeModal('adminModal')">关闭</button></div>
+  </div>
+</div>
+
+<!-- 查看二维码弹窗 -->
+<div class="modal-mask" id="qrModal">
+  <div class="modal">
+    <h2 id="qrModalTitle">扫码入群</h2>
+    <img class="qr-big" id="qrBigImg">
+    <p class="qr-modal-text">打开微信 → 右上角「+」→ 扫一扫<br>扫描上方二维码即可加入群聊</p>
+    <div class="actions"><button class="btn-cancel" onclick="closeModal('qrModal')">关闭</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   部署前必读：腾讯云 CloudBase 配置
+   ═══════════════════════════════════════════════════════════════ */
+
+// 注册开通腾讯云 CloudBase 后，把「环境ID」填到下面引号里：
+// （控制台首页就能看到，格式类似：qun-finder-1a2b3c4d5e）
+const TCB_ENV = 'qun-finder-d3g457i229d193491';
+
+// 初始化 CloudBase
+var tcbApp = cloudbase.init({ env: TCB_ENV });
+var tcbAuth = tcbApp.auth();
+var db = tcbApp.database();
+
+/* ═══════════════════════════════════════════════════════════════
+   常量 & 工具
+   ═══════════════════════════════════════════════════════════════ */
+const DAY = 24 * 60 * 60 * 1000;
+const LOCAL_KEY = 'qun_finder_local_v1';
+
+function loadLocal() {
+  var raw = localStorage.getItem(LOCAL_KEY);
+  if (raw) return JSON.parse(raw);
+  return { credits: 0, myGroupIds: [] };
+}
+function saveLocal(data) { localStorage.setItem(LOCAL_KEY, JSON.stringify(data)); }
+var LOCAL = loadLocal();
+
+function dataURLtoFile(dataurl, filename) {
+  var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+      bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+  while(n--) u8arr[n] = bstr.charCodeAt(n);
+  return new File([u8arr], filename, {type: mime});
+}
+
+function makeFakeQr(text) {
+  var c = document.createElement('canvas');
+  c.width = c.height = 200;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,200,200);
+  ctx.fillStyle = '#16323C';
+  var n = 21, cell = 200 / n;
+  for (var i = 0; i < n; i++) {
+    for (var j = 0; j < n; j++) {
+      if ((i*7 + j*13 + text.length) % 3 === 0) ctx.fillRect(i*cell, j*cell, cell, cell);
+    }
+  }
+  ctx.fillStyle = 'rgba(250,245,238,0.95)'; ctx.fillRect(62,88,76,24);
+  ctx.fillStyle = '#FF4D2E'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('示例',100,105);
+  return c.toDataURL();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function daysLeft(g) { return Math.ceil((g.expireAt - Date.now()) / DAY); }
+
+function expireChip(g) {
+  var d = daysLeft(g);
+  if (d <= 0) return '<span class="expire-chip over">二维码已过期</span>';
+  if (d <= 1) return '<span class="expire-chip soon">今天到期</span>';
+  if (d <= 3) return '<span class="expire-chip soon">二维码 ' + d + ' 天后过期</span>';
+  return '<span class="expire-chip">二维码 ' + d + ' 天后过期</span>';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   数据层（腾讯云 CloudBase）
+   ═══════════════════════════════════════════════════════════════ */
+
+// 拉取所有群（示例群直接读 qrData；真实用户上传的读 qrFileId 换临时链接）
+function fetchGroups() {
+  return db.collection('Group').limit(100).get().then(function(res){
+    var list = res.data.map(function(r){
+      return {
+        objectId: r._id,
+        name: r.name,
+        city: r.city,
+        tags: r.tags || [],
+        desc: r.desc || '',
+        qrData: r.qrData || '',      // 示例群的 dataURL
+        qrFileId: r.qrFileId || '',   // 真实用户的云端 fileID
+        qr: '',
+        expireAt: r.expireAt,
+        status: r.status || 'active',
+        createdAt: r.createdAt || 0
+      };
+    });
+    list.sort(function(a,b){ return b.createdAt - a.createdAt; });
+
+    // 把 dataURL 直接赋给 qr
+    list.forEach(function(g){
+      if (g.qrData) g.qr = g.qrData;
+    });
+
+    // 有 qrFileId 的才走云端临时链接（失败也不影响列表显示）
+    var fileIds = list.map(function(g){ return g.qrFileId; }).filter(Boolean);
+    if (!fileIds.length) return list;
+    var req = fileIds.map(function(id){ return { fileID: id, maxAge: 86400 }; });
+    return tcbApp.getTempFileURL({ fileList: req }).then(function(fres){
+      var urlMap = {};
+      (fres.fileList || []).forEach(function(f){ urlMap[f.fileID] = f.tempFileURL; });
+      list.forEach(function(g){
+        if (g.qrFileId && urlMap[g.qrFileId]) g.qr = urlMap[g.qrFileId];
+      });
+      return list;
+    }).catch(function(){ return list; });
+  });
+}
+
+// 上传二维码图片到云存储，返回文件ID
+function uploadQr(file) {
+  var path = 'qr/' + Date.now() + '_' + Math.random().toString(36).slice(2) + '.png';
+  return tcbApp.uploadFile({ cloudPath: path, filePath: file }).then(function(res){
+    return res.fileID;
+  });
+}
+
+// 创建群
+function createGroup(data) {
+  return db.collection('Group').add({
+    name: data.name,
+    city: data.city,
+    tags: data.tags,
+    desc: data.desc,
+    qrFileId: data.qrFileId || '',
+    qrData: data.qrData || '',   // 示例群用，真实用户上传走云存储
+    expireAt: data.expireAt,
+    status: 'active',
+    createdAt: Date.now()
+  }).then(function(res){ return res.id; });
+}
+
+// 更新群二维码（重新计算7天有效期）
+function updateGroupQr(objectId, qrFileId) {
+  return db.collection('Group').doc(objectId).update({
+    qrFileId: qrFileId,
+    expireAt: Date.now() + 7 * DAY
+  });
+}
+
+// 创建举报，并把群标记为待审核
+function createReport(data) {
+  return db.collection('Report').add({
+    groupId: data.groupId,
+    reason: data.reason,
+    desc: data.desc,
+    createdAt: Date.now()
+  }).then(function(){
+    return db.collection('Group').doc(data.groupId).update({ status: 'pending' });
+  });
+}
+
+// 获取待审核队列（被举报的群 + 对应的举报记录）
+function fetchPendingGroups() {
+  return db.collection('Group').limit(100).get().then(function(gres){
+    var pendings = gres.data.filter(function(g){ return g.status === 'pending'; });
+    if (!pendings.length) return [];
+    return db.collection('Report').limit(100).get().then(function(rres){
+      return pendings.map(function(g){
+        var rs = rres.data.filter(function(r){ return r.groupId === g._id; });
+        return {
+          objectId: g._id,
+          name: g.name,
+          city: g.city,
+          desc: g.desc,
+          status: g.status,
+          reports: rs.map(function(r){ return { reason: r.reason, desc: r.desc, time: r.createdAt }; })
+        };
+      });
+    });
+  });
+}
+
+// 永久下架（删除群及其举报记录）
+function deleteGroup(objectId) {
+  return db.collection('Group').doc(objectId).remove();
+}
+
+// 恢复上架
+function restoreGroupStatus(objectId) {
+  return db.collection('Group').doc(objectId).update({ status: 'active' });
+}
+
+// 自动创建示例群（数据库为空时）
+function seedGroups() {
+  return new Promise(function(resolve, reject){
+    var now = Date.now();
+    var seeds = [
+      { name:'周末网球搭子群', city:'上海 · 徐汇', tags:['网球','运动','搭子'], desc:'每周末约球，新手友好，群里有教练免费指导。', expireAt: now+6*DAY },
+      { name:'铲屎官交流大会', city:'北京 · 朝阳', tags:['宠物','猫','狗'], desc:'本地宠物家长交流群，分享喂养心得、拼团买粮、约遛弯。', expireAt: now+3*DAY },
+      { name:'城市夜骑小分队', city:'杭州 · 西湖', tags:['骑行','公路车','夜骑'], desc:'每周三、周六夜骑，路线环湖，欢迎公路车车友加入。', expireAt: now+1*DAY },
+      { name:'早起读书打卡群', city:'全国线上', tags:['读书','学习','打卡'], desc:'每天 6:30 一起读书打卡，互相监督，每月共读一本书。', expireAt: now+5*DAY }
+    ];
+    var i = 0;
+    function next() {
+      if (i >= seeds.length) { resolve(); return; }
+      var s = seeds[i];
+      // 示例群直接存 dataURL，不走云存储，避免 COS 权限问题
+      createGroup({ name:s.name, city:s.city, tags:s.tags, desc:s.desc, qrData:makeFakeQr(s.name), qrFileId:'', expireAt:s.expireAt })
+        .then(function(){
+          i++; next();
+        }).catch(reject);
+    }
+    next();
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UI 层
+   ═══════════════════════════════════════════════════════════════ */
+var allGroups = [];
+var currentList = [];
+
+function renderList(list) {
+  var box = document.getElementById('groupList');
+  document.getElementById('creditNum').textContent = LOCAL.credits;
+  var visible = list.filter(function(g){ return g.status !== 'pending'; });
+  if (!visible.length) {
+    box.innerHTML = '<div class="empty">没有找到相关的群<br>试试换个关键词，或者成为第一个分享的人吧～</div>';
+    return;
+  }
+  var html = '';
+  visible.forEach(function(g) {
+    var expired = daysLeft(g) <= 0;
+    var isMine = LOCAL.myGroupIds.indexOf(g.objectId) !== -1;
+    var tags = g.tags.map(function(t){ return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join('');
+    html += '<div class="group-card' + (expired ? ' expired' : '') + '">'
+      + '<img class="qr-thumb" src="' + g.qr + '" onclick="showQr(\'' + g.objectId + '\')" title="点击查看二维码">'
+      + '<div class="info">'
+      + '<div class="title-row"><h3>' + escapeHtml(g.name) + '</h3>'
+      + '<button class="btn-report" onclick="openReport(\'' + g.objectId + '\')">举报</button></div>'
+      + '<div class="desc">' + escapeHtml(g.desc || '') + '</div>'
+      + '<div class="meta">' + tags + expireChip(g) + '<span class="city">' + escapeHtml(g.city) + '</span></div>'
+      + (expired && isMine ? '<div style="margin-top:10px"><button class="btn-mini" onclick="openUpdate(\'' + g.objectId + '\')">更新二维码，+1 次搜索机会</button></div>' : '')
+      + '</div></div>';
+  });
+  box.innerHTML = html;
+}
+
+function init() {
+  // CloudBase 网页端需要先登录（这里用匿名登录，用户无感知）
+  tcbAuth.signInAnonymously().then(function(){
+    return fetchGroups();
+    }).then(function(list){
+    allGroups = list;
+    if (!allGroups.length && !localStorage.getItem('qun_seeded')) {
+      toast('正在初始化示例数据…');
+      return seedGroups().then(function(){
+        localStorage.setItem('qun_seeded', '1');
+        return fetchGroups();
+      }).then(function(list2){
+        allGroups = list2;
+      });
+    }
+  }).then(function(){
+    currentList = allGroups.slice();
+    renderList(currentList);
+  }).catch(function(err){
+    console.error(err);
+    toast('连接云端失败，请检查 CloudBase 配置');
+  });
+}
+
+/* 搜索 */
+function doSearch() {
+  var kw = document.getElementById('searchInput').value.trim();
+  if (!kw) { toast('先输入想找的群，比如「网球」「宠物」'); return; }
+  if (LOCAL.credits <= 0) { toast('搜索次数用完啦，先分享一个群二维码吧'); openUpload(); return; }
+  LOCAL.credits -= 1; saveLocal(LOCAL);
+
+  var words = kw.toLowerCase().split(/\s+/);
+  currentList = allGroups.filter(function(g){
+    var hay = (g.name + ' ' + g.city + ' ' + g.desc + ' ' + g.tags.join(' ')).toLowerCase();
+    return words.some(function(w){ return hay.indexOf(w) !== -1; });
+  });
+  renderList(currentList);
+  toast('本次搜索消耗 1 次机会，找到 ' + currentList.length + ' 个群');
+}
+
+function quickSearch(kw) { document.getElementById('searchInput').value = kw; doSearch(); }
+document.getElementById('searchInput').addEventListener('keydown', function(e){ if (e.key === 'Enter') doSearch(); });
+
+/* 分享群 */
+var uploadedQr = '';
+function openUpload() { document.getElementById('uploadModal').classList.add('show'); }
+
+function previewQr(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    uploadedQr = e.target.result;
+    var img = document.getElementById('qrPreview');
+    img.src = uploadedQr; img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function submitGroup() {
+  var name = document.getElementById('fName').value.trim();
+  var city = document.getElementById('fCity').value.trim();
+  var tags = document.getElementById('fTags').value.trim();
+  var desc = document.getElementById('fDesc').value.trim();
+  if (!name || !city || !tags || !uploadedQr) { toast('请把带 * 的内容填完整哦'); return; }
+
+  toast('正在上传，请稍候…');
+  var file = dataURLtoFile(uploadedQr, 'qr_' + Date.now() + '.png');
+  uploadQr(file).then(function(fileID){
+    return createGroup({
+      name: name, city: city,
+      tags: tags.split(/[,，]/).map(function(t){ return t.trim(); }).filter(Boolean),
+      desc: desc, qrFileId: fileID, expireAt: Date.now() + 7 * DAY
+    });
+  }).then(function(id){
+    LOCAL.myGroupIds.push(id);
+    LOCAL.credits += 1;
+    saveLocal(LOCAL);
+
+    ['fName','fCity','fTags','fDesc'].forEach(function(id2){ document.getElementById(id2).value = ''; });
+    document.getElementById('fQr').value = '';
+    document.getElementById('qrPreview').style.display = 'none';
+    uploadedQr = '';
+
+    return fetchGroups();
+  }).then(function(list){
+    allGroups = list; currentList = allGroups.slice(); renderList(currentList);
+    closeModal('uploadModal');
+    toast('分享成功！已获得 1 次搜索机会');
+  }).catch(function(err){
+    console.error(err);
+    toast('上传失败，请重试');
+  });
+}
+
+/* 举报 */
+var currentReportId = null;
+function openReport(id) { currentReportId = id; document.querySelectorAll('input[name="reason"]').forEach(function(r){ r.checked = false; }); document.getElementById('reportDesc').value = ''; document.getElementById('reportModal').classList.add('show'); }
+
+function submitReport() {
+  var checked = document.querySelector('input[name="reason"]:checked');
+  if (!checked) { toast('请先选择一个举报原因'); return; }
+  createReport({ groupId: currentReportId, reason: checked.value, desc: document.getElementById('reportDesc').value.trim() })
+    .then(function(){ return fetchGroups(); })
+    .then(function(list){ allGroups = list; currentList = allGroups.slice(); renderList(currentList); closeModal('reportModal'); toast('已提交人工审核，该群已暂时下架'); })
+    .catch(function(){ toast('提交失败，请重试'); });
+}
+
+/* 审核中心 */
+function openAdmin() { document.getElementById('adminModal').classList.add('show'); renderAdmin(); }
+
+function renderAdmin() {
+  var box = document.getElementById('adminList');
+  box.innerHTML = '<div class="empty" style="padding:30px 0">加载中…</div>';
+  fetchPendingGroups().then(function(list){
+    if (!list.length) { box.innerHTML = '<div class="empty" style="padding:30px 0">太好了，没有待审核的举报</div>'; return; }
+    var html = '';
+    list.forEach(function(g){
+      var reasons = g.reports.map(function(r){ return r.reason; }).join('、');
+      var desc = ''; for (var i = 0; i < g.reports.length; i++) { if (g.reports[i].desc) { desc = g.reports[i].desc; break; } }
+      var timeStr = g.reports.length ? new Date(g.reports[g.reports.length-1].time).toLocaleString() : '';
+      html += '<div class="admin-item">'
+        + '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">'
+        + '<b style="font-size:15px">' + escapeHtml(g.name) + '</b>'
+        + '<span style="font-size:11px;color:#B8B0A2;flex-shrink:0">' + timeStr + '</span></div>'
+        + '<span class="reason">' + g.reports.length + ' 人举报：' + escapeHtml(reasons) + '</span>'
+        + (desc ? '<div style="font-size:13px;color:var(--muted);margin-top:4px">' + escapeHtml(desc) + '</div>' : '')
+        + '<div class="ops">'
+        + '<button class="btn-restore" onclick="restoreGroup(\'' + g.objectId + '\')">恢复上架（误报）</button>'
+        + '<button class="btn-remove" onclick="takedown(\'' + g.objectId + '\')">确认下架</button>'
+        + '</div></div>';
+    });
+    box.innerHTML = html;
+  }).catch(function(){ box.innerHTML = '<div class="empty" style="padding:30px 0">加载失败</div>'; });
+}
+
+function takedown(objectId) {
+  deleteGroup(objectId).then(function(){ return renderAdmin(); }).then(function(){ return fetchGroups(); }).then(function(list){ allGroups = list; currentList = allGroups.slice(); renderList(currentList); toast('该群已下架'); }).catch(function(){ toast('操作失败'); });
+}
+
+function restoreGroup(objectId) {
+  restoreGroupStatus(objectId).then(function(){ return renderAdmin(); }).then(function(){ return fetchGroups(); }).then(function(list){ allGroups = list; currentList = allGroups.slice(); renderList(currentList); toast('已恢复上架'); }).catch(function(){ toast('操作失败'); });
+}
+
+/* 更新二维码 */
+var currentUpdateId = null;
+var updateQrData = '';
+function openUpdate(id) { currentUpdateId = id; updateQrData = ''; document.getElementById('uQr').value = ''; document.getElementById('uQrPreview').style.display = 'none'; document.getElementById('updateModal').classList.add('show'); }
+
+function previewUpdateQr(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) { updateQrData = e.target.result; var img = document.getElementById('uQrPreview'); img.src = updateQrData; img.style.display = 'block'; };
+  reader.readAsDataURL(file);
+}
+
+function submitUpdate() {
+  if (!updateQrData) { toast('请先上传新的二维码图片'); return; }
+  var file = dataURLtoFile(updateQrData, 'qr_update_' + Date.now() + '.png');
+  uploadQr(file).then(function(fileID){
+    return updateGroupQr(currentUpdateId, fileID);
+  }).then(function(){
+    LOCAL.credits += 1; saveLocal(LOCAL);
+    return fetchGroups();
+  }).then(function(list){
+    allGroups = list; currentList = allGroups.slice(); renderList(currentList);
+    closeModal('updateModal');
+    toast('二维码已更新，群恢复可加入，搜索机会 +1');
+  }).catch(function(){ toast('更新失败，请重试'); });
+}
+
+/* 查看二维码 */
+function showQr(objectId) {
+  var g = allGroups.find(function(x){ return x.objectId === objectId; });
+  if (!g) return;
+  if (daysLeft(g) <= 0) { toast('这个群的二维码已过期，等群主更新后再来'); return; }
+  document.getElementById('qrModalTitle').textContent = g.name;
+  document.getElementById('qrBigImg').src = g.qr;
+  document.getElementById('qrModal').classList.add('show');
+}
+
+/* 小工具 */
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+var toastTimer;
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.style.display = 'none'; }, 2200);
+}
+
+/* 启动 */
+init();
+</script>
+</body>
+</html>
