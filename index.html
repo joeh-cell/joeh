@@ -110,43 +110,83 @@ if (typeof cloudbase === 'undefined') {
   .btn-remove { background: var(--ink); color: #fff; }
   .btn-restore { background: var(--coral-light); color: var(--coral-dark); }
   .toast { position: fixed; top: 42%; left: 50%; transform: translate(-50%,-50%); background: var(--ink); color: #fff; padding: 13px 26px; border-radius: 999px; font-size: 14px; z-index: 200; display: none; box-shadow: 0 10px 30px rgba(22,50,60,0.3); }
+  /* ===== 双视图切换（首页 / 结果页） ===== */
+  .view { display: none; }
+  .view.active { display: block; }
+  /* ===== 结果页 ===== */
+  .result-top { max-width: 960px; margin: 0 auto; padding: 26px 20px 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .btn-back { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 10px 18px; font-size: 13px; cursor: pointer; transition: all .15s; }
+  .btn-back:hover { border-color: var(--coral); color: var(--coral); }
+  .result-top .spacer { flex: 1; }
+  .result-head { max-width: 960px; margin: 26px auto 0; padding: 0 20px; }
+  .result-head h2 { font-size: 24px; letter-spacing: -0.5px; }
+  .result-head h2 em { font-family: Georgia, "Songti SC", serif; font-style: italic; color: var(--coral); font-weight: 500; }
+  .result-head .hint { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .filter-bar { max-width: 960px; margin: 16px auto 0; padding: 0 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .filter-bar input { flex: 1; min-width: 150px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 11px 18px; font-size: 13px; outline: none; color: var(--ink); transition: border-color .15s; }
+  .filter-bar input::placeholder { color: #B8B0A2; }
+  .filter-bar input:focus { border-color: var(--coral); }
+  /* 二维码分区网格 */
+  .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; margin-bottom: 26px; }
+  .qr-card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 18px; text-align: center; transition: all .2s; }
+  .qr-card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(22,50,60,0.08); border-color: var(--coral); }
+  .qr-card.expired { opacity: .7; }
+  .qr-card.expired > img { filter: grayscale(1); cursor: not-allowed; }
+  .qr-card > img { width: 100%; max-width: 160px; aspect-ratio: 1; border-radius: 14px; border: 1px solid var(--line); object-fit: cover; cursor: pointer; display: block; margin: 0 auto; }
+  .qr-card h3 { font-size: 15px; margin: 12px 0 8px; letter-spacing: -0.3px; }
+  .qr-card .tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; margin-bottom: 8px; }
+  .qr-card .tags .tag { background: var(--coral-light); color: var(--coral); border-radius: 999px; padding: 3px 10px; font-size: 12px; }
+  .qr-card .foot { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; min-height: 24px; }
   @media (max-width: 560px) { .hero h1 { font-size: 36px; } .credit-bar { justify-content: center; } }
 </style>
 </head>
 <body>
 
-<div class="nav"><div class="logo"><i></i>找群搭子</div></div>
-
-<div class="hero">
-  <div class="badge">分享 1 个群 = 1 次搜索机会</div>
-  <h1>找到你想加入的<br><em>那个圈子</em></h1>
-  <p class="sub">想找网球搭子、本地宠物群、同城骑行圈？<br>分享你已加入的微信群，解锁搜索，扫码直达同好。</p>
-</div>
-
-<div class="search-wrap">
-  <div class="search-box">
-    <input type="text" id="searchInput" placeholder="网球、宠物、骑行、同城……">
-    <button onclick="doSearch()">搜一下</button>
+<!-- ===== 首页：只有大标题 + 搜索框 ===== -->
+<div id="homeView" class="view active">
+  <div class="hero">
+    <div class="badge">分享 1 个群 = 1 次搜索机会</div>
+    <h1>找到你想加入的<br><em>那个圈子</em></h1>
+    <p class="sub">想找网球搭子、本地宠物群、同城骑行圈？<br>分享你已加入的微信群，解锁搜索，扫码直达同好。</p>
   </div>
-  <div class="hot-tags">
-    大家都在搜：
-    <span onclick="quickSearch('网球')">网球</span>
-    <span onclick="quickSearch('宠物')">宠物</span>
-    <span onclick="quickSearch('骑行')">骑行</span>
-    <span onclick="quickSearch('跑步')">跑步</span>
-    <span onclick="quickSearch('羽毛球')">羽毛球</span>
-    <span onclick="quickSearch('读书')">读书</span>
+
+  <div class="search-wrap">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="网球、宠物、骑行、同城……">
+      <button onclick="doSearch()">搜一下</button>
+    </div>
+    <div class="hot-tags">
+      大家都在搜：
+      <span onclick="quickSearch('网球')">网球</span>
+      <span onclick="quickSearch('宠物')">宠物</span>
+      <span onclick="quickSearch('骑行')">骑行</span>
+      <span onclick="quickSearch('跑步')">跑步</span>
+      <span onclick="quickSearch('羽毛球')">羽毛球</span>
+      <span onclick="quickSearch('读书')">读书</span>
+    </div>
   </div>
 </div>
 
-<div class="credit-bar">
-  <div class="credit-info">我的搜索次数还剩 <b id="creditNum">0</b> 次</div>
-  <button class="btn-share" onclick="openUpload()">＋ 分享群二维码，换搜索机会</button>
-</div>
-
-<div class="group-list">
-  <div class="list-title">最新分享的群</div>
-  <div id="groupList"></div>
+<!-- ===== 结果页：群二维码集合（搜索后进入） ===== -->
+<div id="resultView" class="view">
+  <div class="result-top">
+    <button class="btn-back" onclick="goHome()">← 返回首页</button>
+    <div class="spacer"></div>
+    <div class="credit-info">我的搜索次数还剩 <b id="creditNum">0</b> 次</div>
+    <button class="btn-share" onclick="openUpload()">＋ 分享群二维码，换搜索机会</button>
+  </div>
+  <div class="result-head">
+    <h2>群<em>二维码</em>集合</h2>
+    <div class="hint">已按地区分区陈列。下面的筛选可以叠加使用，且不再消耗搜索次数。</div>
+  </div>
+  <div class="filter-bar">
+    <input type="text" id="fLocation" placeholder="地区筛选：如 上海 / 浦东" oninput="applyFilters()">
+    <input type="text" id="fTag" placeholder="标签模糊搜索：如 运动" oninput="applyFilters()">
+    <input type="text" id="fName2" placeholder="群名称精准搜索" oninput="applyFilters()">
+  </div>
+  <div class="group-list" style="max-width:960px">
+    <div id="resultList"></div>
+  </div>
 </div>
 
 <div class="footer">
@@ -452,32 +492,54 @@ function seedGroups() {
    UI 层
    ═══════════════════════════════════════════════════════════════ */
 var allGroups = [];
-var currentList = [];
 
-function renderList(list) {
-  var box = document.getElementById('groupList');
+/* 数据变化后的统一刷新入口 */
+function refreshData(list) {
+  allGroups = list;
   document.getElementById('creditNum').textContent = LOCAL.credits;
-  var visible = list.filter(function(g){ return g.status !== 'pending'; });
-  if (!visible.length) {
-    box.innerHTML = '<div class="empty">没有找到相关的群<br>试试换个关键词，或者成为第一个分享的人吧～</div>';
+  if (document.getElementById('resultView').classList.contains('active')) applyFilters();
+}
+
+/* 视图切换 */
+function switchView(name) {
+  document.getElementById('homeView').classList.toggle('active', name === 'home');
+  document.getElementById('resultView').classList.toggle('active', name === 'result');
+  window.scrollTo(0, 0);
+}
+function goHome() { switchView('home'); }
+
+/* 结果页渲染：按地区分区陈列二维码 */
+function renderResults(list) {
+  document.getElementById('creditNum').textContent = LOCAL.credits;
+  var box = document.getElementById('resultList');
+  if (!list.length) {
+    box.innerHTML = '<div class="empty">没有找到符合条件的群<br>试试放宽筛选条件，或者成为第一个分享的人吧～</div>';
     return;
   }
+  var byCity = {};
+  list.forEach(function(g){ (byCity[g.city] = byCity[g.city] || []).push(g); });
   var html = '';
-  visible.forEach(function(g) {
-    var expired = daysLeft(g) <= 0;
-    var isMine = LOCAL.myGroupIds.indexOf(g.objectId) !== -1;
-    var tags = g.tags.map(function(t){ return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join('');
-    html += '<div class="group-card' + (expired ? ' expired' : '') + '">'
-      + '<img class="qr-thumb" src="' + g.qr + '" onclick="showQr(\'' + g.objectId + '\')" title="点击查看二维码">'
-      + '<div class="info">'
-      + '<div class="title-row"><h3>' + escapeHtml(g.name) + '</h3>'
-      + '<button class="btn-report" onclick="openReport(\'' + g.objectId + '\')">举报</button></div>'
-      + '<div class="desc">' + escapeHtml(g.desc || '') + '</div>'
-      + '<div class="meta">' + tags + expireChip(g) + '<span class="city">' + escapeHtml(g.city) + '</span></div>'
-      + (expired && isMine ? '<div style="margin-top:10px"><button class="btn-mini" onclick="openUpdate(\'' + g.objectId + '\')">更新二维码，+1 次搜索机会</button></div>' : '')
-      + '</div></div>';
+  Object.keys(byCity).forEach(function(city){
+    html += '<div class="list-title">' + escapeHtml(city) + ' · ' + byCity[city].length + ' 个群</div><div class="qr-grid">';
+    byCity[city].forEach(function(g){ html += qrCardHtml(g); });
+    html += '</div>';
   });
   box.innerHTML = html;
+}
+
+function qrCardHtml(g) {
+  var expired = daysLeft(g) <= 0;
+  var isMine = LOCAL.myGroupIds.indexOf(g.objectId) !== -1;
+  var tags = g.tags.map(function(t){ return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join('');
+  return '<div class="qr-card' + (expired ? ' expired' : '') + '">'
+    + '<img src="' + g.qr + '" onclick="showQr(\'' + g.objectId + '\')" title="点击查看二维码">'
+    + '<h3>' + escapeHtml(g.name) + '</h3>'
+    + '<div class="tags">' + tags + '</div>'
+    + '<div>' + expireChip(g) + '</div>'
+    + '<div class="foot">'
+    + (expired && isMine ? '<button class="btn-mini" onclick="openUpdate(\'' + g.objectId + '\')">更新二维码</button>' : '<span></span>')
+    + '<button class="btn-report" onclick="openReport(\'' + g.objectId + '\')">举报</button>'
+    + '</div></div>';
 }
 
 function init() {
@@ -496,31 +558,49 @@ function init() {
       });
     }
   }).then(function(){
-    currentList = allGroups.slice();
-    renderList(currentList);
+    document.getElementById('creditNum').textContent = LOCAL.credits;
   }).catch(function(err){
     console.error(err);
     toast('连接云端失败，请检查 CloudBase 配置');
   });
 }
 
-/* 搜索 */
+/* 首页搜索：消耗 1 次机会，跳转到群二维码集合页 */
+var currentKw = '';
 function doSearch() {
   var kw = document.getElementById('searchInput').value.trim();
   if (!kw) { toast('先输入想找的群，比如「网球」「宠物」'); return; }
   if (LOCAL.credits <= 0) { toast('搜索次数用完啦，先分享一个群二维码吧'); openUpload(); return; }
   LOCAL.credits -= 1; saveLocal(LOCAL);
-
-  var words = kw.toLowerCase().split(/\s+/);
-  currentList = allGroups.filter(function(g){
-    var hay = (g.name + ' ' + g.city + ' ' + g.desc + ' ' + g.tags.join(' ')).toLowerCase();
-    return words.some(function(w){ return hay.indexOf(w) !== -1; });
-  });
-  renderList(currentList);
-  toast('本次搜索消耗 1 次机会，找到 ' + currentList.length + ' 个群');
+  currentKw = kw;
+  ['fLocation','fTag','fName2'].forEach(function(id){ document.getElementById(id).value = ''; });
+  switchView('result');
+  applyFilters();
+  toast('本次搜索消耗 1 次机会，集合页内筛选不再扣次数');
 }
 
 function quickSearch(kw) { document.getElementById('searchInput').value = kw; doSearch(); }
+
+/* 集合页筛选：地区模糊 + 标签模糊 + 群名精准（可叠加，不消耗次数） */
+function applyFilters() {
+  var kw = currentKw.toLowerCase();
+  var loc = document.getElementById('fLocation').value.trim().toLowerCase();
+  var tag = document.getElementById('fTag').value.trim().toLowerCase();
+  var exactName = document.getElementById('fName2').value.trim();
+  var list = allGroups.filter(function(g){
+    if (g.status === 'pending') return false;
+    if (kw) {
+      var hay = (g.name + ' ' + g.city + ' ' + g.desc + ' ' + g.tags.join(' ')).toLowerCase();
+      var hit = kw.split(/\s+/).some(function(w){ return hay.indexOf(w) !== -1; });
+      if (!hit) return false;
+    }
+    if (loc && g.city.toLowerCase().indexOf(loc) === -1) return false;
+    if (tag && !g.tags.some(function(t){ return t.toLowerCase().indexOf(tag) !== -1; })) return false;
+    if (exactName && g.name !== exactName) return false;
+    return true;
+  });
+  renderResults(list);
+}
 document.getElementById('searchInput').addEventListener('keydown', function(e){ if (e.key === 'Enter') doSearch(); });
 
 /* 分享群 */
@@ -566,7 +646,7 @@ function submitGroup() {
 
     return fetchGroups();
   }).then(function(list){
-    allGroups = list; currentList = allGroups.slice(); renderList(currentList);
+    refreshData(list);
     closeModal('uploadModal');
     toast('分享成功！已获得 1 次搜索机会');
   }).catch(function(err){
@@ -584,7 +664,7 @@ function submitReport() {
   if (!checked) { toast('请先选择一个举报原因'); return; }
   createReport({ groupId: currentReportId, reason: checked.value, desc: document.getElementById('reportDesc').value.trim() })
     .then(function(){ return fetchGroups(); })
-    .then(function(list){ allGroups = list; currentList = allGroups.slice(); renderList(currentList); closeModal('reportModal'); toast('已提交人工审核，该群已暂时下架'); })
+    .then(function(list){ refreshData(list); closeModal('reportModal'); toast('已提交人工审核，该群已暂时下架'); })
     .catch(function(){ toast('提交失败，请重试'); });
 }
 
@@ -617,11 +697,11 @@ function renderAdmin() {
 }
 
 function takedown(objectId) {
-  deleteGroup(objectId).then(function(){ return renderAdmin(); }).then(function(){ return fetchGroups(); }).then(function(list){ allGroups = list; currentList = allGroups.slice(); renderList(currentList); toast('该群已下架'); }).catch(function(){ toast('操作失败'); });
+  deleteGroup(objectId).then(function(){ return renderAdmin(); }).then(function(){ return fetchGroups(); }).then(function(list){ refreshData(list); toast('该群已下架'); }).catch(function(){ toast('操作失败'); });
 }
 
 function restoreGroup(objectId) {
-  restoreGroupStatus(objectId).then(function(){ return renderAdmin(); }).then(function(){ return fetchGroups(); }).then(function(list){ allGroups = list; currentList = allGroups.slice(); renderList(currentList); toast('已恢复上架'); }).catch(function(){ toast('操作失败'); });
+  restoreGroupStatus(objectId).then(function(){ return renderAdmin(); }).then(function(){ return fetchGroups(); }).then(function(list){ refreshData(list); toast('已恢复上架'); }).catch(function(){ toast('操作失败'); });
 }
 
 /* 更新二维码 */
@@ -646,7 +726,7 @@ function submitUpdate() {
     LOCAL.credits += 1; saveLocal(LOCAL);
     return fetchGroups();
   }).then(function(list){
-    allGroups = list; currentList = allGroups.slice(); renderList(currentList);
+    refreshData(list);
     closeModal('updateModal');
     toast('二维码已更新，群恢复可加入，搜索机会 +1');
   }).catch(function(){ toast('更新失败，请重试'); });
